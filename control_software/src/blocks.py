@@ -62,6 +62,13 @@ class Block(object):
     def _exception(self, msg, *args, **kwargs):
         self.logger.exception(self._prefix_log(msg), *args, **kwargs)
 
+    def check_exists(self):
+        """
+        Check whether this block exists. The non-robust test used is:
+        do any registers for this block exist?
+        """
+        return len(self.listdev()) > 0
+
     def print_status(self):
         """
         Individual blocks should override this

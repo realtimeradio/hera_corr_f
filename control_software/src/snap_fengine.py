@@ -140,7 +140,11 @@ class SnapFengine(object):
 
         for block in blocks_to_init:
             self.logger.info("Initializing block: %s" % block.name)
-            block.initialize()
+            if block.check_exists():
+                block.initialize()
+            else:
+                self.blocks.remove(block)
+                self.logger.info("Skipped and removed block %s because it doesn't seem to exist" % block.name)
         
         # Set the initialized flag -- arbit reg in the design.
         self.input.change_reg_bits('source_sel', 1, 15, 1)
