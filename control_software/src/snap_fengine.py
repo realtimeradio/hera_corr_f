@@ -7,7 +7,7 @@ from blocks import *
 
 
 class SnapFengine(object):
-    def __init__(self, host, ant_indices=None, logger=None, redishost='redishost'):
+    def __init__(self, host, ant_indices=None, logger=None, redishost='redishost', use_i2c=False):
         self.host = host
         self.logger = logger or add_default_log_handlers(logging.getLogger(__name__ + "(%s)" % host))
         if redishost is None:
@@ -20,6 +20,8 @@ class SnapFengine(object):
             self.serial = socket.gethostbyaddr(self.host)[0]
         except:
             self.serial = None
+
+        self.use_i2c = use_i2c
 
         # blocks
         self.synth       = Synth(self.fpga, 'lmx_ctrl')
@@ -66,15 +68,16 @@ class SnapFengine(object):
             self.initialized = False
 
         self.i2c_initialized = False
-        # The I2C devices mess with FPGA registers
-        # when instantiated. This will fail if the board
-        # isn't programmed yet, so don't bother trying if this
-        # is not the case.
-        if self.fpga.is_connected() and self.is_programmed():
-            try:
-                self._add_i2c()
-            except:
-                self.logger.warning("Failed to register I2C")
+        if self.use_i2c:
+            # The I2C devices mess with FPGA registers
+            # when instantiated. This will fail if the board
+            # isn't programmed yet, so don't bother trying if this
+            # is not the case.
+            if self.fpga.is_connected() and self.is_programmed():
+                try:
+                    self._add_i2c()
+                except:
+                    self.logger.warning("Failed to register I2C")
 
     def _add_i2c(self):
         self.pams        = [Pam(self.fpga, 'i2c_ant%d' % i) for i in range(3)]
@@ -127,9 +130,10 @@ class SnapFengine(object):
 
     def initialize(self):
 
-        # Init PAMs and FEMs
-        if not self.i2c_initialized:
-            self._add_i2c()
+        if self.use_i2c:
+            # Init PAMs and FEMs
+            if not self.i2c_initialized:
+                self._add_i2c()
         
         # Init all blocks other than Synth and ADC 
         blocks_to_init = [blk for blk in self.blocks if blk not in [self.synth, self.adc]]
