@@ -3,6 +3,8 @@
 dump.rdb
 snap_fengine/
 !snap_fengine/outputs/
+snap_fengine_nophase/
+!snap_fengine_nophase/outputs/
 snap_fengine_test/
 !snap_fengine_test/outputs/
 .Xil/
@@ -11,3 +13,4 @@ vivado*.str
 slprj/
 SysgenFeatureReport.htm
 startsg.local
+startsg.local.*
