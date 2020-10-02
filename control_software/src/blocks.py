@@ -628,8 +628,20 @@ class Delay(Block):
         """
         if stream > self.nstreams:
             self._error('Tried to set delay for stream %d > nstreams (%d)' % (stream, self.nstreams))
-        # MSBs of 232-bit register are for stream 0, etc...
-        self.change_reg_bits('delays', delay, 32-4-(4*stream), 4)
+        if "delays" in self.listdev():
+            version = 1
+        else:
+            version = 2
+        if version == 1:
+            # MSBs of 232-bit register are for stream 0, etc...
+            self.change_reg_bits('delays', delay, 32-4-(4*stream), 4)
+        elif version == 2:
+            # control register for this stream
+            regname = "delay%d" % (stream // 3)
+            # start bit for controlling this stream
+            # stream 0 controlled by bits 29:20, stream 1 bits 19:10, stream2 bits 9:0
+            regbitstart = 20 - ((stream % 3) * 10)
+            self.change_reg_bits(regname, delay, regbitstart, 10)
 
     def initialize(self):
         """
